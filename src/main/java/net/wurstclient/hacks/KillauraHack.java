@@ -8,6 +8,7 @@
 package net.wurstclient.hacks;
 
 import java.util.Comparator;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -56,10 +57,14 @@ public final class KillauraHack extends Hack
 	implements UpdateListener, PreMotionListener, RenderListener
 {
 	private final SliderSetting range = new SliderSetting("Range",
-		"Determines how far Killaura will reach\n" + "to attack entities.\n"
-			+ "Anything that is further away than the\n"
-			+ "specified value will not be attacked.",
-		5, 1, 10, 0.05, ValueDisplay.DECIMAL);
+			"Determines how far Killaura will reach\n" + "to attack entities.\n"
+					+ "Anything that is further away than the\n"
+					+ "specified value will not be attacked.",
+			5, 1, 10, 0.05, ValueDisplay.DECIMAL);
+	private final SliderSetting minDelay = new SliderSetting("MinDelay",
+			0, 0, 60, 1, ValueDisplay.INTEGER);
+	private final SliderSetting delay = new SliderSetting("Delay",
+			3, 0, 60, 1, ValueDisplay.INTEGER);
 	
 	private final EnumSetting<Priority> priority = new EnumSetting<>("Priority",
 		"Determines which entity will be attacked first.\n"
@@ -129,12 +134,15 @@ public final class KillauraHack extends Hack
 	
 	private Entity target;
 	private Entity renderTarget;
+	private int attackDelay;
 	
 	public KillauraHack()
 	{
 		super("Killaura", "Automatically attacks entities around you.");
 		setCategory(Category.COMBAT);
 		addSetting(range);
+		addSetting(minDelay);
+		addSetting(delay);
 		addSetting(priority);
 		addSetting(filterPlayers);
 		addSetting(filterSleeping);
@@ -186,10 +194,7 @@ public final class KillauraHack extends Hack
 	{
 		ClientPlayerEntity player = MC.player;
 		ClientWorld world = MC.world;
-		
-		if(player.getAttackCooldownProgress(0) < 1)
-			return;
-		
+
 		double rangeSq = Math.pow(range.getValue(), 2);
 		Stream<Entity> stream =
 			StreamSupport.stream(MC.world.getEntities().spliterator(), true)
@@ -269,7 +274,7 @@ public final class KillauraHack extends Hack
 			return;
 		
 		WURST.getHax().autoSwordHack.setSlot();
-		
+
 		WURST.getRotationFaker()
 			.faceVectorPacket(target.getBoundingBox().getCenter());
 	}
@@ -279,13 +284,27 @@ public final class KillauraHack extends Hack
 	{
 		if(target == null)
 			return;
-		
-		WURST.getHax().criticalsHack.doCritical();
+
 		ClientPlayerEntity player = MC.player;
+		if(player.getAttackCooldownProgress(0) < 1)
+			return;
+		if (this.attackDelay-- > 0) {
+			return;
+		}
+
+		WURST.getHax().criticalsHack.doCritical();
+
 		MC.interactionManager.attackEntity(player, target);
 		player.swingHand(Hand.MAIN_HAND);
 		
 		target = null;
+
+		if (delay.getValueI() == 0) {
+			attackDelay = 0;
+		} else {
+			int minDelayI = minDelay.getValueI();
+			attackDelay = ThreadLocalRandom.current().nextInt(minDelayI, minDelayI + delay.getValueI());
+		}
 	}
 	
 	@Override
