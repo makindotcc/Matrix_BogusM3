@@ -12,6 +12,7 @@ import java.util.function.ToDoubleFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import net.wurstclient.events.PreMotionListener;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -52,7 +53,7 @@ import net.wurstclient.util.RotationUtils;
 @SearchTags({"kill aura", "ForceField", "force field", "CrystalAura",
 	"crystal aura", "AutoCrystal", "auto crystal"})
 public final class KillauraHack extends Hack
-	implements UpdateListener, PostMotionListener, RenderListener
+	implements UpdateListener, PreMotionListener, RenderListener
 {
 	private final SliderSetting range = new SliderSetting("Range",
 		"Determines how far Killaura will reach\n" + "to attack entities.\n"
@@ -165,7 +166,7 @@ public final class KillauraHack extends Hack
 		WURST.getHax().tpAuraHack.setEnabled(false);
 		
 		EVENTS.add(UpdateListener.class, this);
-		EVENTS.add(PostMotionListener.class, this);
+		EVENTS.add(PreMotionListener.class, this);
 		EVENTS.add(RenderListener.class, this);
 	}
 	
@@ -173,7 +174,7 @@ public final class KillauraHack extends Hack
 	protected void onDisable()
 	{
 		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(PostMotionListener.class, this);
+		EVENTS.remove(PreMotionListener.class, this);
 		EVENTS.remove(RenderListener.class, this);
 		
 		target = null;
@@ -274,7 +275,7 @@ public final class KillauraHack extends Hack
 	}
 	
 	@Override
-	public void onPostMotion()
+	public void onPreMotion()
 	{
 		if(target == null)
 			return;

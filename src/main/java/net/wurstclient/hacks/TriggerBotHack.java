@@ -32,6 +32,7 @@ import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.Box;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
+import net.wurstclient.events.PreMotionListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.settings.CheckboxSetting;
@@ -40,7 +41,7 @@ import net.wurstclient.settings.SliderSetting.ValueDisplay;
 import net.wurstclient.util.FakePlayerEntity;
 
 @SearchTags({"trigger bot"})
-public final class TriggerBotHack extends Hack implements UpdateListener
+public final class TriggerBotHack extends Hack implements PreMotionListener
 {
 	private final SliderSetting range =
 		new SliderSetting("Range", 4.25, 1, 6, 0.05, ValueDisplay.DECIMAL);
@@ -125,17 +126,17 @@ public final class TriggerBotHack extends Hack implements UpdateListener
 		WURST.getHax().protectHack.setEnabled(false);
 		WURST.getHax().tpAuraHack.setEnabled(false);
 		
-		EVENTS.add(UpdateListener.class, this);
+		EVENTS.add(PreMotionListener.class, this);
 	}
 	
 	@Override
 	public void onDisable()
 	{
-		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(PreMotionListener.class, this);
 	}
 	
 	@Override
-	public void onUpdate()
+	public void onPreMotion()
 	{
 		ClientPlayerEntity player = MC.player;
 		if(player.getAttackCooldownProgress(0) < 1)
